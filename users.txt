@@ -1,0 +1,3 @@
+juan:1234:buyer
+ana:abcd:seller
+guest:guest:guest
