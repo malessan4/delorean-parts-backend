@@ -5,23 +5,22 @@ const path = require("path");  // <-- Importar path
 const app = express();
 const PORT = 3000;
 const usersFilePath = path.join(__dirname, "users.txt");
-
+const bcrypt = require("bcrypt");
 
 app.use(cors());
 app.use(express.json());
 
-app.post("/register", (req, res) => {
+
+
+app.post("/register", async (req, res) => {
   const { username, password, role } = req.body;
 
   if (!username || !password || !role) {
     return res.status(400).json({ error: "Faltan campos obligatorios" });
   }
 
-  fs.readFile(usersFilePath, "utf-8", (err, data) => {
-    if (err) {
-      return res.status(500).json({ error: "No se pudo leer la base de datos" });
-    }
-
+  try {
+    const data = await fs.promises.readFile(usersFilePath, "utf-8");
     const users = data.split("\n").filter(Boolean).map(line => {
       const [u] = line.trim().split(":");
       return u;
@@ -31,56 +30,47 @@ app.post("/register", (req, res) => {
       return res.status(409).json({ error: "El usuario ya existe" });
     }
 
-    const newLine = `${username}:${password}:${role}\n`;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newLine = `${username}:${hashedPassword}:${role}\n`;
 
-    fs.appendFile(usersFilePath, newLine, (err) => {
-      if (err) {
-        return res.status(500).json({ error: "No se pudo guardar el usuario" });
-      }
+    await fs.promises.appendFile(usersFilePath, newLine);
+    res.status(201).json({ message: "Usuario registrado correctamente" });
 
-      res.status(201).json({ message: "Usuario registrado correctamente" });
-    });
-  });
+  } catch (err) {
+    console.error("Error al registrar", err);
+    res.status(500).json({ error: "Ocurrio un error al registrar el usuario" });
+  }
 });
 
-app.post("/login", (req, res) => {
-  console.log("Datos recibidos:", req.body);
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
-  fs.readFile(usersFilePath, "utf-8", (err, data) => {
-    if (err) {
-      console.error("Error al leer users.txt", err);
-      return res.status(500).json({ error: "No se pudo leer la base de datos" });
-    }
+  try {
+    const data = await fs.promises.readFile(usersFilePath, "utf-8");
 
-    const users = data.split("\n").map(line => {
+    const users = data.split("\n").filter(Boolean).map(line => {
       const [u, p, r] = line.trim().split(":");
       return { username: u, password: p, role: r };
     });
 
-    console.log("Usuarios cargados:", users); // <--- Aquí lo imprimís
+    const user = users.find(u => u.username.trim().toLowerCase() === username.trim().toLowerCase());
 
-let foundUser = null;
-for (const u of users) {
-  console.log(
-    `Comparando: ${u.username.trim().toLowerCase()} === ${username.trim().toLowerCase()} && ${u.password.trim()} === ${password.trim()}`
-  );
-  if (
-    u.username.trim().toLowerCase() === username.trim().toLowerCase() &&
-    u.password.trim() === password.trim()
-  ) {
-    console.log("¡Usuario encontrado!");
-    foundUser = u;
-    break;
+    if (!user) {
+      return res.status(401).json({ error: "Usuario no encontrado" });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (passwordMatch) {
+      res.json({ username: user.username, role: user.role });
+    } else {
+      res.status(401).json({ error: "Contraseña incorrecta" });
+    }
+
+  } catch (err) {
+    console.error("Error en login:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
-}
-if (foundUser) {
-  res.json({ username: foundUser.username, role: foundUser.role });
-} else {
-  console.log("Usuario no encontrado");
-  res.status(401).json({ error: "Credenciales incorrectas" });
-}
-  });
 });
 
 app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
