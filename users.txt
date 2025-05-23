@@ -1,3 +1,7 @@
 juan:1234:buyer
 ana:abcd:seller
 guest:guest:guest
+juanma:$2b$10$zU1jP3.CzlXuoIhqFIYBcuxFU.Un6URf0ZxBdVsead/BJ5hyfZHVe:buyer
+matiascomprador:$2b$10$0m70Ba2se4gznCegdyDtyeIt7lqXvZFuh07qNj0ICqwOynudU4b6y:buyer
+jesica:$2b$10$uqnSHYjatul/JIpUuElfxOh7ErQgAwDKCvz7CNCLNi7UFR8RRvpgu:seller
+dai:$2b$10$vMKT0DQcJ9.AUGfkmKPj9uO57H6B.CwZKumuZdaTTrDfuxqymIu5W:guest
