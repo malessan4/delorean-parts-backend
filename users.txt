@@ -5,3 +5,5 @@ juanma:$2b$10$zU1jP3.CzlXuoIhqFIYBcuxFU.Un6URf0ZxBdVsead/BJ5hyfZHVe:buyer
 matiascomprador:$2b$10$0m70Ba2se4gznCegdyDtyeIt7lqXvZFuh07qNj0ICqwOynudU4b6y:buyer
 jesica:$2b$10$uqnSHYjatul/JIpUuElfxOh7ErQgAwDKCvz7CNCLNi7UFR8RRvpgu:seller
 dai:$2b$10$vMKT0DQcJ9.AUGfkmKPj9uO57H6B.CwZKumuZdaTTrDfuxqymIu5W:guest
+emma:$2b$10$xoDN95AdT26Djdu97vTG8.of.4g4/HyhpvFzrhP0NCUq4Tdq2Wrp6:buyer
+matiasvendedor:$2b$10$HbOnpFW0Gya8AiYT4jBFy.V/KiqDrCgiqIGfcZuQH9dOVqP/VwPZ2:seller

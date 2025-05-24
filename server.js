@@ -5,13 +5,14 @@ const path = require("path");  // <-- Importar path
 const app = express();
 const PORT = 3000;
 const usersFilePath = path.join(__dirname, "users.txt");
+const partsFilePath = path.join(__dirname, "parts.txt");
 const bcrypt = require("bcrypt");
 
 app.use(cors());
 app.use(express.json());
 
 
-
+// Logica para crear usuario
 app.post("/register", async (req, res) => {
   const { username, password, role } = req.body;
 
@@ -42,6 +43,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
+// Logica para login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -70,6 +72,24 @@ app.post("/login", async (req, res) => {
   } catch (err) {
     console.error("Error en login:", err);
     res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+app.post("/publish-part", async (req, res) => {
+  const { name, description, price, seller} = req.body;
+
+  if (!name || !price || !seller){
+    return res.status(400).json({ error: "Faltan datos del repuesto"});
+  }
+
+  const partLine = `${name}:${description || "Sin descripción"}:${price}:${seller}\n`;
+
+ try {
+    await fs.promises.appendFile(partsFilePath, partLine);
+    res.status(201).json({ message: "Repuesto guardado correctamente" });
+  } catch (err) {
+    console.error("Error al guardar el repuesto:", err);
+    res.status(500).json({ error: "Error al guardar el repuesto" });
   }
 });
 
