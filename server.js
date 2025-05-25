@@ -7,9 +7,15 @@ const PORT = 3000;
 const usersFilePath = path.join(__dirname, "users.txt");
 const partsFilePath = path.join(__dirname, "parts.txt");
 const bcrypt = require("bcrypt");
+const partsRouter = require('./routes/parts');
+const { v4: uuidv4 } = require('uuid');
+const id = uuidv4();
+
+
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/parts', partsRouter);
 
 
 // Logica para crear usuario
@@ -76,21 +82,49 @@ app.post("/login", async (req, res) => {
 });
 
 app.post("/publish-part", async (req, res) => {
-  const { name, description, price, seller} = req.body;
 
-  if (!name || !price || !seller){
-    return res.status(400).json({ error: "Faltan datos del repuesto"});
+  const { name, description, price, seller } = req.body;
+
+  if (!name || !price || !seller) {
+    return res.status(400).json({ error: "Faltan datos del repuesto" });
   }
 
-  const partLine = `${name}:${description || "Sin descripción"}:${price}:${seller}\n`;
+  const numericPrice = Number(price);
 
- try {
+  if (isNaN(numericPrice)) {
+    return res.status(400).json({ error: "Precio inválido" });
+  }
+  const id = uuidv4();
+  const partLine = JSON.stringify({ id, name, description, price, seller }) + "\n";
+
+  try {
     await fs.promises.appendFile(partsFilePath, partLine);
     res.status(201).json({ message: "Repuesto guardado correctamente" });
   } catch (err) {
     console.error("Error al guardar el repuesto:", err);
     res.status(500).json({ error: "Error al guardar el repuesto" });
   }
+});
+
+app.get("/parts", (req, res) => {
+  fs.readFile(partsFilePath, "utf8", (err, data) => {
+    if (err) return res.status(500).json({ error: "No se pudo leer archivo" });
+
+    const lines = data.trim().split("\n").filter(Boolean);
+    const parts = [];
+
+    for (const line of lines) {
+      try {
+        const part = JSON.parse(line);
+        parts.push(part);
+      } catch (e) {
+        console.warn("Línea inválida ignorada:", line);
+        // Podés también registrar esto en un archivo si querés
+      }
+    }
+
+    res.json(parts);
+  });
 });
 
 app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
