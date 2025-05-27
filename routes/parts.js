@@ -1,42 +1,54 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
 const router = express.Router();
+const partsFilePath = path.join(__dirname, "../parts.txt");
 
+// Obtener todas las partes (ya lo tenés probablemente)
+router.get("/", (req, res) => {
+  fs.readFile(partsFilePath, "utf8", (err, data) => {
+    if (err) return res.status(500).json({ error: "No se pudo leer archivo" });
 
-const partsPath = path.join(__dirname, '../parts.txt');
-
-// DELETE /api/parts/:id
-router.delete('/:id', (req, res) => {
-  const idToDelete = req.params.id;
-
-  fs.readFile(partsPath, 'utf8', (err, data) => {
-    if (err) return res.status(500).json({ message: 'Error leyendo archivo' });
-
-    const lines = data.trim().split('\n').filter(Boolean);
+    const lines = data.trim().split("\n").filter(Boolean);
     const parts = [];
+
     for (const line of lines) {
       try {
-        parts.push(JSON.parse(line));
+        const part = JSON.parse(line);
+        parts.push(part);
       } catch (e) {
         console.warn("Línea inválida ignorada:", line);
       }
     }
 
-    const newParts = parts.filter(p => p.id !== idToDelete);
-
-    if (newParts.length === parts.length) {
-      return res.status(404).json({ message: 'Repuesto no encontrado' });
-    }
-
-    const newData = newParts.map(p => JSON.stringify(p)).join('\n') + '\n';
-
-    fs.writeFile(partsPath, newData, 'utf8', (err) => {
-      if (err) return res.status(500).json({ message: 'Error escribiendo archivo' });
-
-      res.json({ message: 'Compra realizada' });
-    });
+    res.json(parts);
   });
+});
+
+// 💥 Nueva ruta para eliminar parte por ID
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const data = await fs.promises.readFile(partsFilePath, "utf8");
+    const lines = data.trim().split("\n").filter(Boolean);
+
+    const updatedLines = lines.filter(line => {
+      try {
+        const part = JSON.parse(line);
+        return part.id !== id;
+      } catch {
+        return true;
+      }
+    });
+
+    await fs.promises.writeFile(partsFilePath, updatedLines.join("\n") + "\n");
+
+    res.status(200).json({ message: "Parte eliminada correctamente" });
+  } catch (err) {
+    console.error("Error al eliminar parte:", err);
+    res.status(500).json({ error: "Error al eliminar parte" });
+  }
 });
 
 module.exports = router;
