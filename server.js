@@ -13,7 +13,6 @@ const id = uuidv4();
 
 
 app.use(cors({ origin: "https://delorean-parts.netlify.app" }));
-app.use(cors());
 app.use(express.json());
 app.use('/api/parts', partsRouter);
 
